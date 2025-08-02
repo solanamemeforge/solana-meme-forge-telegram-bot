@@ -15,7 +15,6 @@ Try the working bot: [@Meme_Forge_bot](https://t.me/Meme_Forge_bot)
 - **Authority Revocation**: Automatic revocation of mint, freeze, and update authorities
 - **Payment Processing**: Automated Solana payment verification
 - **Bonus System**: Free custom addresses for new users
-- **Multi-language Support**: Extensible language system
 - **Admin Panel**: Administrative commands and statistics
 
 ## 🏗️ Architecture
