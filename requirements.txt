@@ -1,0 +1,8 @@
+aiohttp~=3.11.13
+aiogram~=3.18.0
+python-dotenv==1.0.0
+requests==2.31.0
+solana==0.36.6
+base58==2.1.1
+Pillow==10.1.0
+PySide6==6.8.1
