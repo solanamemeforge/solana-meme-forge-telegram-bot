@@ -48,7 +48,7 @@ Try the working bot: [@Meme_Forge_bot](https://t.me/Meme_Forge_bot)
 - **Node.js 16+**
 - **SQLite3**
 - **Telegram Bot Token** (from [@BotFather](https://t.me/BotFather))
-- **Helius API Key** (from [helius.xyz](https://helius.xyz))
+- **Helius API Key** (from [helius.xyz](https://helius.dev))
 - **Pinata API Keys** (from [pinata.cloud](https://pinata.cloud))
 
 ## ⚙️ Installation
