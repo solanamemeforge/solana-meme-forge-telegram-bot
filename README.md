@@ -56,7 +56,7 @@ Try the working bot: [@Meme_Forge_bot](https://t.me/Meme_Forge_bot)
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/solana-memecoin-bot.git
+git clone https://github.com/solanamemeforge/solana-meme-forge-telegram-bot.git
 cd solana-memecoin-bot
 ```
 
