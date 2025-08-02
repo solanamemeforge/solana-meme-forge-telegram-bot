@@ -70,7 +70,7 @@ async def buy_custom_address(callback_query: types.CallbackQuery, state: FSMCont
         await handle_invalid_state(callback_query, state)
         return
 
-    log_user_action(callback_query.from_user, "запросил покупку кастомного адреса")
+    log_user_action(callback_query.from_user, "custom")
 
     try:
         available_endings = get_available_custom_endings()
@@ -102,10 +102,10 @@ async def buy_custom_address(callback_query: types.CallbackQuery, state: FSMCont
 
         await handle_message_update(callback_query, TelegramFormatter.escape_text(message_text), keyboard)
 
-        logging.info(f"{user_info} показаны кастомные адреса: {len(available_endings)} шт., бонусов: {bonus_addresses}")
+        logging.info(f"{user_info} custom: {len(available_endings)}, bonus: {bonus_addresses}")
 
     except Exception as e:
-        logging.error(f"{user_info} ошибка при получении кастомных адресов: {e}")
+        logging.error(f"{user_info} error: {e}")
         back_keyboard = InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(text="⬅️ Back", callback_data="back_to_confirmation")
         ]])
@@ -150,7 +150,7 @@ async def select_custom_ending(callback_query: types.CallbackQuery, state: FSMCo
             logging.error(f"Error checking bonus availability: {e}")
 
     log_user_action(callback_query.from_user,
-                    f"выбрал кастомное окончание: {ending} ({'WILL USE BONUS' if is_bonus_used else f'{custom_price} SOL'})")
+                    f"custom: {ending} ({'WILL USE BONUS' if is_bonus_used else f'{custom_price} SOL'})")
 
     # Save selection state
     await state.update_data(
@@ -208,7 +208,7 @@ async def select_custom_ending(callback_query: types.CallbackQuery, state: FSMCo
         )
 
     logging.info(
-        f"{user_info} выбрал кастомное окончание {ending}, новая сумма: {total_amount} SOL, будет использовать бонус: {is_bonus_used}")
+        f"{user_info} custom {ending}, new: {total_amount} SOL, bonus: {is_bonus_used}")
 
 
 async def back_to_confirmation(callback_query: types.CallbackQuery, state: FSMContext):
@@ -225,7 +225,7 @@ async def back_to_confirmation(callback_query: types.CallbackQuery, state: FSMCo
         await handle_invalid_state(callback_query, state)
         return
 
-    log_user_action(callback_query.from_user, "вернулся к подтверждению")
+    log_user_action(callback_query.from_user, "back")
 
     # Remove custom address selection
     if 'custom_ending' in user_data:
@@ -234,7 +234,7 @@ async def back_to_confirmation(callback_query: types.CallbackQuery, state: FSMCo
             custom_price=None,
             is_bonus_used=False
         )
-        logging.info(f"{user_info} отменил выбор кастомного адреса")
+        logging.info(f"{user_info} cancelled")
 
     # Show original confirmation screen
     user_data = await state.get_data()
@@ -262,7 +262,7 @@ async def back_to_confirmation(callback_query: types.CallbackQuery, state: FSMCo
             reply_markup=inline_keyboard,
             parse_mode="MarkdownV2"
         )
-        logging.info(f"{user_info} возврат к подтверждению с фото")
+        logging.info(f"{user_info} back")
     else:
         logo_display = user_data['token_logo']
         summary = summary.replace("📷 Photo from Telegram", logo_display)
@@ -272,7 +272,7 @@ async def back_to_confirmation(callback_query: types.CallbackQuery, state: FSMCo
             reply_markup=inline_keyboard,
             parse_mode="MarkdownV2"
         )
-        logging.info(f"{user_info} возврат к подтверждению без фото")
+        logging.info(f"{user_info} back")
 
     await state.set_state(BotStates.confirm_create)
 
@@ -283,7 +283,7 @@ async def cancel_custom_address(callback_query: types.CallbackQuery, state: FSMC
     user_data = await state.get_data()
     user_info = user_data.get('user_info', get_user_info(callback_query.from_user))
 
-    log_user_action(callback_query.from_user, "отменил покупку кастомного адреса")
+    log_user_action(callback_query.from_user, "cancelled")
 
     # Remove custom address selection
     await state.update_data(custom_ending=None, custom_price=None)
@@ -318,7 +318,7 @@ async def confirm_custom_address(message: types.Message, state: FSMContext):
         await state.set_state(BotStates.confirm_create)
         return
 
-    log_user_action(message.from_user, f"подтвердил покупку кастомного адреса: {custom_ending}")
+    log_user_action(message.from_user, f"confirmed: {custom_ending}")
 
     # Continue with normal confirmation flow but with custom address
     await state.set_state(BotStates.confirm_create)

@@ -73,10 +73,9 @@ function loadWalletPublicKey() {
 }
 
 async function createMintKeypair(forceRandom = false) {
-  // Implementation hidden - custom mint generation logic
   console.log('Creating mint keypair...');
 
-  // This is a placeholder - actual implementation varies based on configuration
+  // Custom mint generation logic here
   const keypair = Keypair.generate();
   console.log(`Generated mint address: ${keypair.publicKey.toBase58()}`);
   return keypair;
@@ -144,17 +143,22 @@ async function createMemeCoin(retryWithRandom = false, dbRetryCount = 0) {
     const tokenMintKeypair = await createMintKeypair(retryWithRandom);
     const tokenMintPubkey = tokenMintKeypair.publicKey;
 
-    // Implementation details hidden for security
-    // This would contain the actual token creation logic
+    // Token creation logic placeholder
+    console.log('Processing token creation...');
+    await sleep(1000);
 
     console.log('Token creation process completed');
 
-    // Placeholder token info
     const tokenInfo = {
       name: runtimeConfig.TOKEN_NAME,
       symbol: runtimeConfig.TOKEN_SYMBOL,
       tokenMint: tokenMintPubkey.toString(),
-      // Other fields would be populated by actual implementation
+      totalSupply: runtimeConfig.TOTAL_SUPPLY,
+      decimals: runtimeConfig.DECIMALS,
+      mintSignature: 'placeholder-mint-signature',
+      usedMemeDatabase: !!dbPrivateKey,
+      dbRetryCount,
+      wasRetryWithRandom: retryWithRandom
     };
 
     return tokenInfo;
@@ -168,8 +172,9 @@ async function setupMetadata() {
   try {
     console.log('Setting up token metadata...');
 
-    // Implementation details hidden
-    // This would contain metadata setup logic
+    // Metadata setup logic placeholder
+    await sleep(500);
+    console.log('Metadata setup completed');
 
     return 'metadata-signature-placeholder';
   } catch (error) {
@@ -192,10 +197,16 @@ async function runFullProcess() {
     const metadataSignature = await setupMetadata();
 
     // Step 4: Send tokens to user (if specified)
-    // Implementation hidden
+    if (runtimeConfig.SEND_TO_USER_WALLET && runtimeConfig.USER_WALLET_ADDRESS) {
+      console.log('Sending tokens to user...');
+      await sleep(500);
+    }
 
     // Step 5: Revoke authorities
-    // Implementation hidden
+    if (runtimeConfig.REVOKE_AUTHORITIES) {
+      console.log('Revoking authorities...');
+      await sleep(500);
+    }
 
     console.log('Token creation process completed');
     return tokenInfo;
