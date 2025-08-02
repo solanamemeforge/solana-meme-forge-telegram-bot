@@ -17,9 +17,11 @@ async function revokeAllAuthorities() {
             throw new Error('Token info does not contain tokenMint address');
         }
 
+        // IMPORTANT: Revoke Freeze Authority first!
         console.log('\nRevoking Freeze Authority first:');
         const freezeResult = await revokeFreezeAuthority();
 
+        // Then revoke other authorities
         const mintResult = await revokeMintAuthority();
         const updateResult = await revokeUpdateAuthority();
 

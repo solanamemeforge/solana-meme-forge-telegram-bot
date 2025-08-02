@@ -24,19 +24,78 @@ async function revokeFreezeAuthority() {
             confirmTransactionInitialTimeout: 60000
         });
 
+        console.log('Checking token information in blockchain...');
         const accountInfo = await connection.getAccountInfo(tokenMint);
         if (!accountInfo) {
             throw new Error('Token not found in blockchain');
         }
         console.log('Token found, data size:', accountInfo.data.length, 'bytes');
 
-        // Implementation details hidden for security
-        // This would contain the actual freeze authority revocation logic
-
         console.log('Creating freeze authority revocation transaction...');
+        const transaction = new Transaction();
 
-        // Placeholder - actual implementation would create and send transaction
-        const signature = 'placeholder-freeze-signature';
+        transaction.add(
+            createSetAuthorityInstruction(
+                tokenMint,
+                wallet.publicKey,
+                AuthorityType.FreezeAccount,
+                null, // null means revoke authority
+                [],
+                TOKEN_PROGRAM_ID
+            )
+        );
+
+        await updateTransactionBlockhash(transaction, connection, {
+            feePayer: wallet.publicKey
+        });
+
+        console.log('Sending transaction with updated blockhash...');
+
+        let signature = null;
+        let success = false;
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                if (attempt > 0) {
+                    await updateTransactionBlockhash(transaction, connection, {
+                        feePayer: wallet.publicKey
+                    });
+                }
+
+                signature = await connection.sendTransaction(transaction, [wallet], {
+                    skipPreflight: false,
+                    preflightCommitment: 'processed',
+                    maxRetries: 3
+                });
+
+                console.log(`Transaction sent, awaiting confirmation: ${signature}`);
+
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash: transaction.recentBlockhash,
+                    lastValidBlockHeight: transaction.lastValidBlockHeight
+                }, 'confirmed');
+
+                success = true;
+                break;
+            } catch (error) {
+                console.warn(`Error on attempt ${attempt + 1}: ${error.message}`);
+                if (attempt < 1 && (
+                    error.message.includes('expired') ||
+                    error.message.includes('blockhash') ||
+                    error.message.includes('block height exceeded')
+                )) {
+                    console.log('Waiting before retry...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    continue;
+                }
+                throw error;
+            }
+        }
+
+        if (!success) {
+            throw new Error('All transaction attempts exhausted');
+        }
 
         console.log('FREEZE AUTHORITY SUCCESSFULLY REVOKED!');
         console.log('Transaction signature:', signature);
@@ -48,6 +107,9 @@ async function revokeFreezeAuthority() {
         return true;
     } catch (error) {
         console.error('ERROR REVOKING FREEZE AUTHORITY:', error);
+        if (error.logs) {
+            console.error('Transaction logs:', error.logs);
+        }
 
         if (error.message && (
             error.message.includes('already been revoked') ||

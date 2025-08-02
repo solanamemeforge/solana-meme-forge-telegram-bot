@@ -41,13 +41,75 @@ async function revokeUpdateAuthority() {
             return false;
         }
 
-        // Implementation details hidden for security
-        // This would contain the actual update authority revocation logic
+        const nullAddress = new PublicKey('11111111111111111111111111111111');
+        console.log('Null address for Update Authority revocation:', nullAddress.toString());
 
-        console.log('Creating update authority revocation transaction...');
+        const transaction = new Transaction().add(
+            createUpdateMetadataAccountV2Instruction(
+                {
+                    metadata: metadataPDA,
+                    updateAuthority: wallet.publicKey,
+                },
+                {
+                    updateMetadataAccountArgsV2: {
+                        data: null, // Leave data unchanged
+                        updateAuthority: nullAddress, // Set to null address
+                        primarySaleHappened: null,
+                        isMutable: false, // Make token immutable
+                    },
+                }
+            )
+        );
 
-        // Placeholder - actual implementation would create and send transaction
-        const signature = 'placeholder-update-signature';
+        await updateTransactionBlockhash(transaction, connection, {
+            feePayer: wallet.publicKey
+        });
+
+        let signature = null;
+        let success = false;
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                if (attempt > 0) {
+                    await updateTransactionBlockhash(transaction, connection, {
+                        feePayer: wallet.publicKey
+                    });
+                }
+
+                signature = await connection.sendTransaction(transaction, [wallet], {
+                    skipPreflight: false,
+                    preflightCommitment: 'processed',
+                    maxRetries: 3
+                });
+
+                console.log(`Transaction sent, awaiting confirmation: ${signature}`);
+
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash: transaction.recentBlockhash,
+                    lastValidBlockHeight: transaction.lastValidBlockHeight
+                }, 'confirmed');
+
+                success = true;
+                break;
+            } catch (error) {
+                console.warn(`Error on attempt ${attempt + 1}: ${error.message}`);
+                if (attempt < 1 && (
+                    error.message.includes('expired') ||
+                    error.message.includes('blockhash') ||
+                    error.message.includes('block height exceeded')
+                )) {
+                    console.log('Waiting before retry...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    continue;
+                }
+                throw error;
+            }
+        }
+
+        if (!success) {
+            throw new Error('All transaction attempts exhausted');
+        }
 
         console.log('Update Authority successfully revoked! Transaction:', signature);
 
@@ -59,6 +121,9 @@ async function revokeUpdateAuthority() {
         return true;
     } catch (error) {
         console.error('Error revoking Update Authority:', error);
+        if (error.logs) {
+            console.error('Error logs:', error.logs);
+        }
         return false;
     }
 }
